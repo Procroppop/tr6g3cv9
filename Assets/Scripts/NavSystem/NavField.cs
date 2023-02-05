@@ -10,38 +10,37 @@ namespace NavSystem.Field
         [SerializeField] private Vector2 _rightDownCorner;
         [SerializeField] private Vector2 _offset;
 
+        //TEMP
+        private List<GameObject> _cells = new();
+
         [ContextMenu("Generate field")]
         public void GenerateField()
         {
+            _cells.ForEach(cell => { Destroy(cell); });
+
             List<GameObject> cells = new List<GameObject>();
+
+            if(_offset.x <= 0 || _offset.y <= 0)
+            {
+                Debug.LogError("Offset must be greater than zero");
+                return;
+            }
 
             Vector2 cellScale = (Vector2)_cellPrefab.transform.lossyScale;
 
-            if (_offset.y <= -cellScale.y)
-                _offset.y = -cellScale.y + cellScale.x / 3;
-
-            if (_offset.x <= -cellScale.x)
-                _offset.x = -cellScale.x + cellScale.x / 3;
-
-            Vector2 offsetScale = cellScale + _offset;
+            Vector2 offsetScale = cellScale * _offset;
 
             Vector2 rightUpCorner = new Vector2(_rightDownCorner.x, _leftUpCorner.y);
             Vector2 leftDownCorner = new Vector2(_leftUpCorner.x, _rightDownCorner.y);
 
 
-            int cellCountInRow = Mathf.FloorToInt((_rightDownCorner.x - _leftUpCorner.x) / offsetScale.x);
-            int cellCountInColumn = Mathf.FloorToInt((_leftUpCorner.y - _rightDownCorner.y) / offsetScale.y);
+            int cellCountInRow = Mathf.CeilToInt((_rightDownCorner.x - _leftUpCorner.x - cellScale.x) / _offset.x);
+            int cellCountInColumn = Mathf.CeilToInt((_leftUpCorner.y - _rightDownCorner.y - cellScale.y) / _offset.y);
 
-            if(_offset.x < 0)
-                cellCountInRow--;
-            if (_offset.y < 0)
-                cellCountInColumn--;
+            cellCountInRow = Mathf.Abs(cellCountInRow);
+            cellCountInColumn = Mathf.Abs(cellCountInColumn);
 
-            Debug.Log(_rightDownCorner.x - _leftUpCorner.x);
-            Debug.Log(offsetScale.x);
-            Debug.Log(cellCountInRow);
-
-            cells.AddRange(DrawField(StartPoint.LeftUp, _leftUpCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
+            cells.AddRange(DrawField(StartPoint.LeftUp, _leftUpCorner, cellCountInRow, cellCountInColumn, cellScale, _offset));
             cells.AddRange(DrawField(StartPoint.RightUp, rightUpCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
             cells.AddRange(DrawField(StartPoint.LeftDown, leftDownCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
             cells.AddRange(DrawField(StartPoint.RightDown, _rightDownCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
@@ -51,7 +50,7 @@ namespace NavSystem.Field
             List<GameObject> blackList = new();
 
             foreach (var cell1 in cells)
-            { 
+            {
                 if (blackList.Contains(cell1))
                     continue;
 
@@ -59,15 +58,18 @@ namespace NavSystem.Field
                 {
                     if (cell1 != cell2 && cell1.transform.position == cell2.transform.position)
                     {
-                        if(!blackList.Contains(cell2))
+                        if (!blackList.Contains(cell2))
                             blackList.Add(cell2);
                     }
                 }
             }
 
-            blackList.ForEach((cell) => { Destroy(cell); removed++;});
+            blackList.ForEach((cell) => { Destroy(cell); removed++; });
 
             Debug.Log($"Removed: {removed} equal cells");
+
+            //TEMP
+            _cells = cells;
         }
 
         enum StartPoint
@@ -122,14 +124,13 @@ namespace NavSystem.Field
                     spawnedObj.Add(columnCell);
                 }
             }
-
             return spawnedObj;
         }
 
         private void OnDrawGizmos()
         {
-            Gizmos.DrawSphere(_leftUpCorner, 0.4f);
-            Gizmos.DrawSphere(_rightDownCorner, 0.4f);
+            Gizmos.DrawSphere(_leftUpCorner, 0.2f);
+            Gizmos.DrawSphere(_rightDownCorner, 0.2f);
         }
     }
 }
