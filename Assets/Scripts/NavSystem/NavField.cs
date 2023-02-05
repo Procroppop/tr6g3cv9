@@ -41,9 +41,9 @@ namespace NavSystem.Field
             cellCountInColumn = Mathf.Abs(cellCountInColumn);
 
             cells.AddRange(DrawField(StartPoint.LeftUp, _leftUpCorner, cellCountInRow, cellCountInColumn, cellScale, _offset));
-            cells.AddRange(DrawField(StartPoint.RightUp, rightUpCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
-            cells.AddRange(DrawField(StartPoint.LeftDown, leftDownCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
-            cells.AddRange(DrawField(StartPoint.RightDown, _rightDownCorner, cellCountInRow, cellCountInColumn, cellScale, offsetScale));
+            cells.AddRange(DrawField(StartPoint.RightUp, rightUpCorner, cellCountInRow, cellCountInColumn, cellScale, _offset));
+            cells.AddRange(DrawField(StartPoint.LeftDown, leftDownCorner, cellCountInRow, cellCountInColumn, cellScale, _offset));
+            cells.AddRange(DrawField(StartPoint.RightDown, _rightDownCorner, cellCountInRow, cellCountInColumn, cellScale, _offset));
 
             int removed = 0;
 
@@ -129,8 +129,8 @@ namespace NavSystem.Field
 
         private void OnDrawGizmos()
         {
-            Gizmos.DrawSphere(_leftUpCorner, 0.2f);
-            Gizmos.DrawSphere(_rightDownCorner, 0.2f);
+            Gizmos.DrawSphere((Vector3)_leftUpCorner + Vector3.forward * transform.position.z, 0.5f);
+            Gizmos.DrawSphere((Vector3)_rightDownCorner + Vector3.forward * transform.position.z, 0.5f);
         }
     }
 }
