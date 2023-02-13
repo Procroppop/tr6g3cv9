@@ -10,8 +10,24 @@ namespace NavSystem.Field
         [SerializeField] private Vector2 _rightDownCorner;
         [SerializeField] private Vector2 _offset;
 
+        [SerializeField] private GameObject _upZone;
+        [SerializeField] private GameObject _midZone;
+        [SerializeField] private GameObject _downZone;
+
+        [SerializeField] private LayerMask _cellLayer;
+
+        private Vector3[] _upZonePoints;
+        private Vector3[] _midZonePoints;
+        private Vector3[] _downZonePoints;
+
         //TEMP
         private List<GameObject> _cells = new();
+
+        private void Awake()
+        {
+            //GenerateField();
+            SetZones(ref _upZonePoints, ref _midZonePoints, ref _downZonePoints);
+        }
 
         [ContextMenu("Generate field")]
         public void GenerateField()
@@ -32,7 +48,6 @@ namespace NavSystem.Field
 
             Vector2 rightUpCorner = new Vector2(_rightDownCorner.x, _leftUpCorner.y);
             Vector2 leftDownCorner = new Vector2(_leftUpCorner.x, _rightDownCorner.y);
-
 
             int cellCountInRow = Mathf.CeilToInt((_rightDownCorner.x - _leftUpCorner.x - cellScale.x) / _offset.x);
             int cellCountInColumn = Mathf.CeilToInt((_leftUpCorner.y - _rightDownCorner.y - cellScale.y) / _offset.y);
@@ -131,6 +146,20 @@ namespace NavSystem.Field
         {
             Gizmos.DrawSphere((Vector3)_leftUpCorner + Vector3.forward * transform.position.z, 0.5f);
             Gizmos.DrawSphere((Vector3)_rightDownCorner + Vector3.forward * transform.position.z, 0.5f);
+        }
+
+        private void SetZones(ref Vector3[] upZone, ref Vector3[] midZone, ref Vector3[] downZone)
+        {
+            RaycastHit2D[] hits;
+
+            hits = Physics2D.BoxCastAll(_upZone.transform.position, _upZone.transform.localScale, _upZone.transform.rotation.z, Vector2.up, 0, _cellLayer);
+
+            Debug.Log(hits.Length);
+
+            foreach (var hit in hits)
+            {
+                hit.transform.gameObject.SetActive(false);
+            }
         }
     }
 }
