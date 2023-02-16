@@ -1,8 +1,17 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace NavSystem.Field
 {
+    public enum Zone
+    {
+        None,
+        Up,
+        Middle,
+        Down
+    }
+
     public class NavField : MonoBehaviour
     {
         [SerializeField] private GameObject _cellPrefab;
@@ -16,17 +25,16 @@ namespace NavSystem.Field
 
         [SerializeField] private LayerMask _cellLayer;
 
-        private Vector3[] _upZonePoints;
-        private Vector3[] _midZonePoints;
-        private Vector3[] _downZonePoints;
+        [SerializeField] private static Vector3[] _upZonePoints;
+        [SerializeField] private static Vector3[] _midZonePoints;
+        [SerializeField] private static Vector3[] _downZonePoints;
 
         //TEMP
         private List<GameObject> _cells = new();
 
         private void Awake()
         {
-            //GenerateField();
-            SetZones(ref _upZonePoints, ref _midZonePoints, ref _downZonePoints);
+            SetUpZones();
         }
 
         [ContextMenu("Generate field")]
@@ -36,7 +44,7 @@ namespace NavSystem.Field
 
             List<GameObject> cells = new List<GameObject>();
 
-            if(_offset.x <= 0 || _offset.y <= 0)
+            if (_offset.x <= 0 || _offset.y <= 0)
             {
                 Debug.LogError("Offset must be greater than zero");
                 return;
@@ -148,18 +156,62 @@ namespace NavSystem.Field
             Gizmos.DrawSphere((Vector3)_rightDownCorner + Vector3.forward * transform.position.z, 0.5f);
         }
 
-        private void SetZones(ref Vector3[] upZone, ref Vector3[] midZone, ref Vector3[] downZone)
+        public static Vector3[] GetZonePoints(Zone zone)
+        {
+            switch (zone)
+            {
+                case Zone.Up:
+                    return _upZonePoints;
+                case Zone.Middle:
+                    return _midZonePoints;
+                case Zone.Down:
+                    return _downZonePoints;
+                default:
+                    return default;
+            }
+        }
+
+        [ContextMenu("Bake zones")]
+        private void SetUpZones()
+        {
+            SetZone(ref _upZonePoints, Zone.Up);
+            SetZone(ref _midZonePoints, Zone.Middle);
+            SetZone(ref _downZonePoints, Zone.Down);
+        }
+
+        private void SetZone(ref Vector3[] zonePoints, Zone zone)
         {
             RaycastHit2D[] hits;
+            Transform zoneTransform = null;
 
-            hits = Physics2D.BoxCastAll(_upZone.transform.position, _upZone.transform.localScale, _upZone.transform.rotation.z, Vector2.up, 0, _cellLayer);
+            switch (zone)
+            {
+                case Zone.Up:
+                    zoneTransform = _upZone.transform;
+                    break;
+                case Zone.Middle:
+                    zoneTransform = _midZone.transform;
+                    break;
+                case Zone.Down:
+                    zoneTransform = _downZone.transform;
+                    break;
+                default:
+                    return;
+            }
 
-            Debug.Log(hits.Length);
+            hits = Physics2D.BoxCastAll(zoneTransform.position, zoneTransform.localScale, zoneTransform.rotation.z, Vector2.up, 0, _cellLayer);
+
+            Vector3[] result = new Vector3[hits.Length];
+
+            var i = 0;
 
             foreach (var hit in hits)
             {
-                hit.transform.gameObject.SetActive(false);
+                result[i] = hit.transform.position;
+                i++;
             }
+
+            zonePoints = result;
         }
     }
 }
